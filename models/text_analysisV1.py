@@ -2,18 +2,20 @@
 # Created in 2023
 # Block Analysis v.1
 
+# basic tools
 import numpy as np
+import math
 import config
 import logging
 import nltk
 import spacy
-import re
+from itertools import chain
 from collections import Counter
 # LDA model
 from gensim.corpora.dictionary import Dictionary
 from gensim.models import LdaModel, EnsembleLda, CoherenceModel
 from gensim.models.callbacks import PerplexityMetric, CoherenceMetric
-from itertools import chain
+# word embeddings
 import tensorflow as tf
 import tensorflow_hub as hub
 
@@ -176,29 +178,37 @@ class TextAnalyze:
 
 def block_ranking(stack_items, question):
     # 1. data pre-process
+    print("Step 1. Data pre-process")
     analyzer = TextAnalyze()
-    q_corpus = [analyzer.content_pre_process(i['question']['content'])[0]
-                for i in stack_items]
-    ans_corpus = [list(chain.from_iterable([analyzer.content_pre_process(ans['content'])[0] for ans in i['answers']]))
+    # q_corpus = [analyzer.content_pre_process(i['question']['content'])[0]
+    #            for i in stack_items]
+    ans_corpus = [[analyzer.content_pre_process(ans['content'])[0] for ans in i['answers']]
                   for i in stack_items]
+    print(ans_corpus)
+    # list(chain.from_iterable([analyzer.content_pre_process(ans['content'])[0]
 
     # 2. generate training data
-    training_data = [np.concatenate(ans) for ans in a if len(ans) > 0]
+    print("Step 2. Generating train data")
+    training_data = [list(chain.from_iterable(ans)) for ans in ans_corpus]
+    print(training_data)
     dictionary = Dictionary(training_data)
-    corpus = [dictionary.doc2bow(text) for text in training_data]
+    # corpus = [dictionary.doc2bow(text) for text in ans_corpus]
 
     # 3. train topic model
-    model = analyzer.train_lda_model(training_data, config.TOPIC_NUM)  # LDA
-    # model = analyzer.train_elda_model(training_data, config.TOPIC_NUM, 5)  # eLDA
+    print("Step 3. Train topic model")
+    # model = analyzer.train_lda_model(training_data, config.TOPIC_NUM)  # LDA
+    model = analyzer.train_elda_model(training_data, config.TOPIC_NUM, 5)  # eLDA
     topics = [t for t in model.print_topics(config.TOPIC_TERM_NUM)]
+    print(topics)
 
     # 4. apply word embeddings
+    print("Step 4. Word embeddings")
     embed = hub.KerasLayer("embeds/Wiki-words-250_2",
                            input_shape=[],
                            dtype=tf.string,
                            trainable=True,
                            name="Word_Embedding_Layer")
-    word_pattern = r'\*"(.*?)"'
+    # word_pattern = r'\*"(.*?)"'
     user_q_vector = embed([question])  # user question embed
     q_title_vectors = embed([i['question']['title'] for i in stack_items])  # post questions embeds
     # a_vector = [embed([' '.join(ans) for ans in q]) for q in ans_corpus]    # block content embeds
@@ -206,11 +216,13 @@ def block_ranking(stack_items, question):
     # t_vector = [embed([" ".join(re.findall(word_pattern, t[1]))]) for t in topics]
 
     # 5. calculate similarity between questions
+    print("Step 5. Calculate similarity")
     question_sim = [tf.losses.CosineSimilarity()(user_q_vector[0], t_vec).numpy() for t_vec in q_title_vectors]
     abs_question_sim = [abs(1 + sim) for sim in question_sim]
     print(abs_question_sim)
 
     # 6. predict the topic distribution of user question & blocks (which topic it might belong to)
+    print("Step 6. Predict topic distribution")
     user_q_topic_dist = model[dictionary.doc2bow(analyzer.content_pre_process(question)[0])][0]
     user_q_topic_dist = {t[0]: t[1] for t in user_q_topic_dist}
     print(user_q_topic_dist)
@@ -220,15 +232,16 @@ def block_ranking(stack_items, question):
         ans_blocks_dist.append([model[block][0] for block in a_corpus])
 
     # 7. calculate topic similarity between user question & blocks
+    print("Step 7. Rankings")
     block_prob = []
     block_terms = []
     block_count = 0
     for d in range(len(stack_items)):
         temp = []
-        ans_score = [a['score'] for a in stack_items[d]['answers']]
+        ans_score = [ans['score'] for ans in stack_items[d]['answers']]
         for a_idx in range(len(stack_items[d]['answers'])):
             block_count += len(stack_items[d]['answers'])
-            prob = np.log(sum([user_q_topic_dist[t[0]] * t[1] for t in ans_blocks_dist[d][a_idx]]) / 3)
+            prob = math.log(sum([user_q_topic_dist[t[0]] * t[1] for t in ans_blocks_dist[d][a_idx]]) / 3)
             if ans_score[a_idx] >= 0:
                 block_prob.append({"id": stack_items[d]['answers'][a_idx]['id'],
                                    "prob": prob,
