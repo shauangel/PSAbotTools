@@ -1,10 +1,10 @@
-# PSAbot Experiments Version 0.0
+# Created in 2021
+# Block Analysis v.0
+#
 #
 
 import numpy as np
-# nltk
 import nltk
-# spacy
 import spacy
 # LDA model
 from gensim.corpora.dictionary import Dictionary
@@ -99,13 +99,10 @@ def block_ranking(stack_items, qkey):
     for i in range(len(all_content_flat)):
         all_content_flat[i]["score"] = temp_result[i]
     rank = sorted(all_content_flat, key=lambda data: data["score"], reverse=True)
-    return rank
+    return rank[:10]
 
 
 if __name__ == "__main__":
-    test = TextAnalyze()
-    l, d = test.content_pre_process("what is happening now?!!")
-    print(l)
 
     """
     questions, responses = get_filename()
