@@ -259,7 +259,6 @@ def block_ranking(stack_items, question):
 
     # 9. consider original score (normalized)
 
-
     return rank[:10]
 
 

@@ -1,5 +1,5 @@
 import _db
-import text_analysisV1 as ta
+import text_analysisV0 as ta
 
 
 # 載入資料
