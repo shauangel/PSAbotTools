@@ -5,6 +5,7 @@
 # basic tools
 import numpy as np
 import math
+import statistics
 import config
 import logging
 import nltk
@@ -18,6 +19,8 @@ from gensim.models.callbacks import PerplexityMetric, CoherenceMetric
 # word embeddings
 import tensorflow as tf
 import tensorflow_hub as hub
+# data normalization
+from sklearn import preprocessing
 
 
 # TextAnalyze Module: pre-processing word content, ex
@@ -196,8 +199,8 @@ def block_ranking(stack_items, question):
 
     # 3. train topic model
     print("Step 3. Train topic model")
-    # model = analyzer.train_lda_model(training_data, config.TOPIC_NUM)  # LDA
-    model = analyzer.train_elda_model(training_data, config.TOPIC_NUM, 5)  # eLDA
+    model = analyzer.train_lda_model(training_data, config.TOPIC_NUM)  # LDA
+    # model = analyzer.train_elda_model(training_data, config.TOPIC_NUM, 5)  # eLDA
     topics = [t for t in model.print_topics(config.TOPIC_TERM_NUM)]
     print(topics)
 
@@ -231,30 +234,43 @@ def block_ranking(stack_items, question):
         a_corpus = [dictionary.doc2bow(terms) for terms in ans]
         ans_blocks_dist.append([model[block][0] for block in a_corpus])
 
-    # 7. calculate topic similarity between user question & blocks
+    # 7. calculate topic rel between user question & blocks
     print("Step 7. Rankings")
     block_prob = []
     block_terms = []
     block_count = 0
+    formatter = "{:.5f}"
     for d in range(len(stack_items)):
         temp = []
-        ans_score = [ans['score'] for ans in stack_items[d]['answers']]
+        if len(stack_items[d]['answers']) > 0:
+            ans_score = np.array([ans['score'] for ans in stack_items[d]['answers']])
+            divider = (ans_score.max() - ans_score.min() + 10**-100)
+            minmax = (ans_score - ans_score.min()) / divider
+            mean = (ans_score - ans_score.mean()) / divider
+            # zscore = (ans_score - ans_score.mean()) / ans_score.std()
         for a_idx in range(len(stack_items[d]['answers'])):
             block_count += len(stack_items[d]['answers'])
-            prob = math.log(sum([user_q_topic_dist[t[0]] * t[1] for t in ans_blocks_dist[d][a_idx]]) / 3)
             if ans_score[a_idx] >= 0:
-                block_prob.append({"id": stack_items[d]['answers'][a_idx]['id'],
-                                   "prob": prob,
-                                   "q_sim": str(abs_question_sim[d]),
-                                   "b_score": str(prob*abs_question_sim[d]),
-                                   "so_score": str(ans_score[a_idx])})
+                print(ans_blocks_dist[d][a_idx])
+                prob = sum([(user_q_topic_dist[t[0]] * t[1]) if t[0] in user_q_topic_dist.keys() else 0
+                            for t in ans_blocks_dist[d][a_idx]]) / 3
+                record = {"id": stack_items[d]['answers'][a_idx]['id'],
+                          "prob": prob,
+                          "q_sim": formatter.format(abs_question_sim[d]),
+                          "b_score": str(prob * abs_question_sim[d]),
+                          "so_score": str(ans_score[a_idx]),
+                          "min-max": formatter.format(minmax[a_idx]),  # 0~1
+                          "mean": formatter.format(mean[a_idx])       # -1~1
+                          }
+                block_prob.append(record)
             # prepare terms for keyword extraction
             temp.append(Counter(ans_corpus[d][a_idx]))
         block_terms.append(temp)
     print("total block count: " + str(block_count))
-    print("reduced block: " + str(len(block_prob)))
+    print("valid block: " + str(len(block_prob)))
 
-    # 8. Rank blocks
+    # 8. Normalized Rank
+
     rank = sorted(block_prob, key=lambda x: x['b_score'])
 
     # 9. consider original score (normalized)
