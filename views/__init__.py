@@ -3,10 +3,10 @@ from .stack_data_api import stack_data_api
 from .data_manager_api import data_manager_api
 
 blueprint_prefix = [
-                    (text_analysis_api, "/api"),
-                    (stack_data_api, "/api"),
-                    (data_manager_api, "/api")
-                    ]
+    (text_analysis_api, "/api"),
+    (stack_data_api, "/api"),
+    (data_manager_api, "/api")
+]
 
 
 def register_blueprint(app):
