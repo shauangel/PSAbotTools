@@ -18,7 +18,6 @@ from gensim.models.callbacks import PerplexityMetric, CoherenceMetric
 import tensorflow as tf
 import tensorflow_hub as hub
 # data normalization
-from sklearn import preprocessing
 
 
 # TextAnalyze Module: pre-processing word content, ex

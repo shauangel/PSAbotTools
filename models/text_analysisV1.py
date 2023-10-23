@@ -3,7 +3,6 @@
 # Block Analysis v.1
 
 # basic tools
-import numpy as np
 import math
 import config
 import logging
