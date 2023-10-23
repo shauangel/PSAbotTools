@@ -1,5 +1,5 @@
 import _db
-import text_analysisV1 as ta
+import text_analysisV2 as ta
 
 
 # 載入資料
@@ -18,13 +18,13 @@ if __name__ == "__main__":
     # load data
     i = _db.TEST_DATA.find_one({"category": "CoreLanguage"})
     SO_data = load_data(i['question'])
-    # ta.block_ranking(SO_data, [])
 
     # extract keywords from user question
     analyzer = ta.TextAnalyze()
-    qkey, doc = analyzer.content_pre_process(i['question'])
+    # qkey, doc = analyzer.content_pre_process(i['question'])
 
     rank = ta.block_ranking(stack_items=SO_data, question=i['question'])
-    print(rank)
+    for r in rank:
+        print(r)
     # print(i['question'])
     # print(SO_data)
