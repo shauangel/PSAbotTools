@@ -40,12 +40,12 @@ def block_analysis():
             if data['version'] == 0:
                 ranks = text_analysisV0.block_ranking(stack_items=data['items'], qkey=data['qkey'])
             elif data['version'] == 1:
-                ranks = text_analysisV1.block_ranking(stack_items=data['items'], qkey=data['qkey'])
+                ranks = text_analysisV1.block_ranking(stack_items=data['items'], q=data['q'])
             else:
-                ranks = text_analysisV2.block_ranking(stack_items=data['items'], qkey=data['qkey'])
+                ranks = text_analysisV2.block_ranking(stack_items=data['items'], q=data['q'])
         except KeyError:
             print("Using default version 2 ...")
-            ranks = text_analysisV2.block_ranking(stack_items=data['items'], qkey=data['qkey'])
+            ranks = text_analysisV2.block_ranking(stack_items=data['items'], q=data['q'])
         response = {"ranks": ranks}
     except Exception as e:
         response = {"error": e.__class__.__name__ + " : " + e.args[0]}
