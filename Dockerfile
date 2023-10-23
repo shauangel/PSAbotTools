@@ -2,21 +2,13 @@
 FROM python:3.9
 
 # work dir application's code
-RUN mkdir /usr/src/app
-WORKDIR /usr/src/app
-COPY . /usr/src/app/
-
-# priviledge settings
-RUN useradd -m docker
-RUN chown -R docker:docker /usr/src/app
-RUN groupadd -f docker
-USER docker
-
+RUN mkdir /app
+WORKDIR /app
+COPY . /app/
 
 # Install our dependencies, by running a command in the container
-RUN pip install --upgrade pip
-RUN pip install gunicorn
-RUN pip install -r /usr/src/app/requirements.txt
+RUN pip install --upgrade pip --no-cache-dir
+RUN pip install -r /app/requirements.txt --no-cache-dir
 RUN python -m spacy download en_core_web_sm
 RUN python -m spacy download en_core_web_md
 RUN python -m spacy download en_core_web_lg
