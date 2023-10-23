@@ -4,8 +4,6 @@
 
 # basic tools
 import numpy as np
-import math
-import statistics
 import config
 import logging
 import nltk
@@ -280,3 +278,4 @@ def block_ranking(stack_items, question):
 
 if __name__ == "__main__":
     print("Text Analysis V.2")
+    print(config.TOPIC_NUM)
