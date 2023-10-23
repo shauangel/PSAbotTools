@@ -1,0 +1,41 @@
+apiVersion: toolbox/v1
+kind: Deployment
+metadata:
+  name: psabottools
+  labels:
+    app: psabottools
+    source: hsrn-tutorial
+spec:
+  # Run two copies of the Pod
+  replicas: 2
+  # Perform rolling updates, starting containers before stopping the old ones
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      # This is how the Deployment recognizes its Pods, has to match the labels
+      # of the Pod template
+      app: flask-clock
+  template:
+    metadata:
+      labels:
+        app: flask-clock
+    spec:
+      containers:
+        # Here's our Flask container
+        - name: flask-app
+          image: ttl.sh/hsrn-flask-clock
+          ports:
+            # This is the port we'll expose to the internet eventually
+            - name: web
+              containerPort: 5000
+          resources:
+            requests:
+              cpu: 10m # Request very little CPU
+              memory: 100Mi # Request that this memory be allocated to us
+            limits:
+              cpu: 100m # Throttle the container if using more CPU
+              memory: 100Mi # Terminate the container if using more memory
