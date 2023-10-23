@@ -45,15 +45,18 @@ class StackData:
         data_requests = [data]      # Collects all responses
         # print(data)
         # if it has more pages, construct a new requests for next page
-        while data["has_more"]:
-            # print("-"*20)
-            page += 1
-            api = self.get_api_url(str(page), is_answers)
-            data = requests.get(api).json()
-            data_requests.append(data)
-            # print(page)
-            # print(data)
-            # print("-" * 20)
+        try:
+            while data["has_more"]:
+                # print("-"*20)
+                page += 1
+                api = self.get_api_url(str(page), is_answers)
+                data = requests.get(api).json()
+                data_requests.append(data)
+                # print(page)
+                # print(data)
+                # print("-" * 20)
+        except KeyError:
+            print("No extra page")
         return data_requests
 
     # method: Get full question posts
