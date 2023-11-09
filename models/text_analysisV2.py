@@ -203,7 +203,7 @@ def block_ranking(stack_items, question):
 
     # 4. apply word embeddings
     print("Step 4. Word embeddings")
-    embed = hub.KerasLayer("embeds/Wiki-words-250_2",
+    embed = hub.KerasLayer("/Users/shauangel/PycharmProjects/PSAbotTools/models/embeds/Wiki-words-250_2",
                            input_shape=[],
                            dtype=tf.string,
                            trainable=True,

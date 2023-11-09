@@ -18,7 +18,7 @@ if __name__ == "__main__":
     # Step 1. Search via Custom JSON Search API
     result_page = requests.post(url=local_test_url + "/api/search",
                                 json={"keywords": ["python", "use", "flask"],
-                                      "result_num": 10,
+                                      "result_num": 5,
                                       "page_num": 0})
     while result_page.status_code == 204:
         time.sleep(10)
@@ -37,5 +37,5 @@ if __name__ == "__main__":
     print(stack_items.json())
     # Step 3. block analysis
     resp = requests.post(url=local_test_url + "/api/block_analysis",
-                         json={"items": stack_items['items'], "q": q}).json()
+                         json={"items": stack_items.json()['items'], "q": q}).json()
     print(resp)
