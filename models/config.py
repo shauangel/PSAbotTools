@@ -38,3 +38,6 @@ LINE_STYLE_TUPLE_LIST = [
 MARKER_STYLE_LIST = ['1', 'x', '|', 4, 10,
                      '.', 'o', '8', 's', 'p', '*', 'h', 'd', 'P', 'X', ',']
 BAR_FILL_STYLE = ['/', '///', '.', 'xx', '*', 'o', '++']
+
+# Embeddings server
+EMBEDDINGS_URL = "http://192.168.100.40:10003/api"
