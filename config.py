@@ -1,5 +1,8 @@
 import logging
 
+# Embeddings server
+EMBEDDINGS_URL = "http://192.168.100.40:10003/api"
+
 # LDA model settings
 PASSES = 10
 CHUNKSIZE = 5

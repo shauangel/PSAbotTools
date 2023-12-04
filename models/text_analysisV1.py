@@ -4,6 +4,7 @@
 
 # basic tools
 import math
+import requests
 import config
 import logging
 import nltk
@@ -17,6 +18,7 @@ from gensim.models.callbacks import PerplexityMetric, CoherenceMetric
 # word embeddings
 import tensorflow as tf
 import tensorflow_hub as hub
+import embeddings
 
 
 # TextAnalyze Module: pre-processing word content, ex
@@ -207,12 +209,12 @@ def block_ranking(stack_items, question):
                            dtype=tf.string,
                            trainable=True,
                            name="Word_Embedding_Layer")
-    # word_pattern = r'\*"(.*?)"'
-    user_q_vector = embed([question])  # user question embed
+    # user_q_vector = embed([question])  # user question embed
+    # q_title_vectors = embed([i['question']['title'] for i in stack_items])  # post questions embeds
+
+    user_q_vector = embeddings.embeds()
     q_title_vectors = embed([i['question']['title'] for i in stack_items])  # post questions embeds
-    # a_vector = [embed([' '.join(ans) for ans in q]) for q in ans_corpus]    # block content embeds
-    # t_vector = [embed([" ".join(re.findall(word_pattern, t))]) for t in topics]  # topic terms embeds
-    # t_vector = [embed([" ".join(re.findall(word_pattern, t[1]))]) for t in topics]
+
 
     # 5. calculate similarity between questions
     print("Step 5. Calculate similarity")
