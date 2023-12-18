@@ -4,6 +4,7 @@
 
 # basic tools
 import math
+import numpy as np
 from models import config
 import logging
 import nltk
@@ -15,7 +16,6 @@ from gensim.corpora.dictionary import Dictionary
 from gensim.models import LdaModel, EnsembleLda, CoherenceModel
 from gensim.models.callbacks import PerplexityMetric, CoherenceMetric
 # word embeddings
-import tensorflow as tf
 from models import embeddings
 
 
@@ -174,6 +174,20 @@ class TextAnalyze:
                 "c_uci_per_topic": c_uci_per_t,
                 "c_npmi_per_topic": c_npmi_per_t}
 
+    @staticmethod
+    def cosine_similarity_loss(v_a, v_b):
+        # cosine similarity = Vector_a•Vector_b / |Vector_a|*|Vector_b|
+        # loss: range from -1 to 1
+        # -1: identical vector, 1: opposite vector, 0: orthogonal vector
+
+        # dot production & magnitude
+        dot = np.dot(v_a, v_b)
+        mag_a = np.linalg.norm(v_a)
+        mag_b = np.linalg.norm(v_b)
+
+        # similarity
+        sim = dot/(mag_a*mag_b)
+        return sim*-1
 
 def block_ranking(stack_items, question):
     # 1. data pre-process
@@ -202,18 +216,12 @@ def block_ranking(stack_items, question):
 
     # 4. apply word embeddings
     print("Step 4. Word embeddings")
-    #embed = hub.KerasLayer("/Users/shauangel/PycharmProjects/PSAbotTools/models/embeds/Wiki-words-250_2",
-    #                       input_shape=[],
-    #                       dtype=tf.string,
-    #                       trainable=True,
-    #                       name="Word_Embedding_Layer")
-    # word_pattern = r'\*"(.*?)"'
     user_q_vector = embeddings.embeds([question])
     q_title_vectors = embeddings.embeds([i['question']['title'] for i in stack_items])  # post questions embeds
 
     # 5. calculate similarity between questions
     print("Step 5. Calculate similarity")
-    question_sim = [tf.losses.CosineSimilarity()(user_q_vector[0], t_vec).numpy() for t_vec in q_title_vectors]
+    question_sim = [analyzer.cosine_similarity_loss(user_q_vector[0], t_vec) for t_vec in q_title_vectors]
     abs_question_sim = [abs(1 + sim) for sim in question_sim]
     print(abs_question_sim)
 
